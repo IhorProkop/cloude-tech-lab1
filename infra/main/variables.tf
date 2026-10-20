@@ -54,3 +54,8 @@ variable "github_repo" {
   type        = string
   default     = "IhorProkop@174109475/cloude-tech-lab1@1425948594"
 }
+
+variable "alert_email" {
+  description = "Email для сповіщень CloudWatch-алярмів (через SNS)"
+  type        = string
+}
