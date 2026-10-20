@@ -2,7 +2,7 @@
 // requireAuth перевіряє токен у заголовку Authorization для захищених ендпоінтів.
 const jwt = require('jsonwebtoken');
 
-// POST /login — тіло: {"username": "...", "password": "..."}
+// POST /login - тіло: {"username": "...", "password": "..."}
 function login(req, res) {
   const username = req.body?.username;
   const password = req.body?.password;

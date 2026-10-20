@@ -12,7 +12,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   identifier        = "${var.project}-db"
   engine            = "postgres"
-  engine_version    = "17" # лише мажорна версія — AWS підставить актуальну мінорну
+  engine_version    = "17" # лише мажорна версія - AWS підставить актуальну мінорну
   instance_class    = "db.t4g.micro"
   allocated_storage = 20
   storage_type      = "gp3"

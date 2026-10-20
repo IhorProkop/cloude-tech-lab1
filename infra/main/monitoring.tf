@@ -1,7 +1,7 @@
 # Моніторинг у CloudWatch: алярми на помилки 5xx і непрацюючі задачі за ALB
 # (сповіщення на email через SNS) і дашборд з основними метриками ALB та ECS.
 
-# Після apply AWS надішле на alert_email лист — підписку треба підтвердити за посиланням з нього
+# Після apply AWS надішле на alert_email лист - підписку треба підтвердити за посиланням з нього
 resource "aws_sns_topic" "alerts" {
   name = "${var.project}-alerts"
 }
@@ -13,7 +13,7 @@ resource "aws_sns_topic_subscription" "email" {
 }
 
 # Хоча б одна відповідь 5xx від застосунку за хвилину.
-# notBreaching: немає запитів — немає даних — алярм у стані OK.
+# notBreaching: немає запитів - немає даних - алярм у стані OK.
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   alarm_name          = "${var.project}-alb-5xx"
   alarm_description   = "Application returned 5xx responses"

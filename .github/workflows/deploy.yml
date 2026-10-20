@@ -1,5 +1,5 @@
 # CI/CD: при зміні застосунку збирає Docker-образ, пушить його в ECR і деплоїть нову ревізію в ECS.
-# Доступ до AWS — через OIDC-роль (infra/main/github_oidc.tf), без збережених ключів.
+# Доступ до AWS - через OIDC-роль (infra/main/github_oidc.tf), без збережених ключів.
 name: Deploy to ECS
 
 on:

@@ -13,7 +13,7 @@ resource "random_password" "auth_password" {
 resource "aws_secretsmanager_secret" "app" {
   name = "${var.project}-app-secrets"
 
-  # Видаляти одразу, без періоду відновлення (типово 7–30 днів): інакше після destroy
+  # Видаляти одразу, без періоду відновлення (типово 7-30 днів): інакше після destroy
   # секрет з тим самим ім'ям не вдасться створити знову до кінця цього періоду
   recovery_window_in_days = 0
 }

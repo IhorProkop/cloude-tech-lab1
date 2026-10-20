@@ -1,5 +1,5 @@
 # Мережа: VPC з двома публічними і двома приватними підмережами у двох AZ.
-# Публічні виходять в інтернет через Internet Gateway, приватні — через NAT Gateway.
+# Публічні виходять в інтернет через Internet Gateway, приватні - через NAT Gateway.
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -70,7 +70,7 @@ resource "aws_eip" "nat" {
 }
 
 # NAT Gateway стоїть у публічній підмережі й дає приватним підмережам вихід в інтернет.
-# Один NAT на обидві AZ — дешевше, ніж по одному в кожній.
+# Один NAT на обидві AZ - дешевше, ніж по одному в кожній.
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public_a.id
