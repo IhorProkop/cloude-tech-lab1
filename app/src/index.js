@@ -3,6 +3,8 @@
 const express = require('express');
 const { pool, createTable } = require('./db');
 const routes = require('./routes');
+const swaggerUi = require('swagger-ui-express');
+const openapi = require('./openapi.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +26,9 @@ app.get('/health', async (req, res) => {
 });
 
 app.use('/tasks', routes);
+
+// Документація API: Swagger UI за специфікацією з openapi.json
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 createTable()
   .then(() => {

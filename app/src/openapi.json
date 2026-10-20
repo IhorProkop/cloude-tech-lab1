@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tasks API",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Назва і версія API",
+        "responses": {
+          "200": {
+            "description": "Назва і версія",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string", "example": "Tasks API" },
+                    "version": { "type": "string", "example": "1.0" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Стан застосунку і БД",
+        "responses": {
+          "200": {
+            "description": "Застосунок і БД працюють",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "status": { "type": "string", "example": "ok" } }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "БД недоступна",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "status": { "type": "string", "example": "error" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "summary": "Список усіх задач",
+        "responses": {
+          "200": {
+            "description": "Масив задач",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Task" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Створити задачу",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewTask" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Задачу створено",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "400": {
+            "description": "Не передано title",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer", "minimum": 1 }
+        }
+      ],
+      "get": {
+        "summary": "Одна задача",
+        "responses": {
+          "200": {
+            "description": "Задача",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "400": {
+            "description": "Некоректний id",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Задачу не знайдено",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Видалити задачу",
+        "responses": {
+          "204": {
+            "description": "Задачу видалено"
+          },
+          "400": {
+            "description": "Некоректний id",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Задачу не знайдено",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "Купити молоко" },
+          "done": { "type": "boolean", "example": false },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "NewTask": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "example": "Купити молоко" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "Task not found" }
+        }
+      }
+    }
+  }
+}
