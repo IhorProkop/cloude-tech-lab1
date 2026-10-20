@@ -47,8 +47,10 @@ variable "desired_count" {
   default     = 2
 }
 
+# GitHub включає в OIDC-claim sub незмінні числові ID власника і репозиторію (формат owner@id/repo@id).
+# Прив'язуємо роль саме до них, бо назву можна перейменувати або зайняти після видалення.
 variable "github_repo" {
-  description = "GitHub-репозиторій (owner/name), якому дозволено деплой через OIDC"
+  description = "GitHub-репозиторій (owner@id/name@id), якому дозволено деплой через OIDC"
   type        = string
-  default     = "IhorProkop/cloude-tech-lab1"
+  default     = "IhorProkop@174109475/cloude-tech-lab1@1425948594"
 }
