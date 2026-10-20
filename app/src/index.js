@@ -9,6 +9,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ name: 'Tasks API', version: '1.0' });
+});
+
 // Перевірка стану: застосунок живий і база даних відповідає
 app.get('/health', async (req, res) => {
   try {
