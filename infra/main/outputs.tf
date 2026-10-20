@@ -22,3 +22,15 @@ output "db_endpoint" {
 output "db_secret_arn" {
   value = aws_db_instance.main.master_user_secret[0].secret_arn
 }
+
+output "app_url" {
+  value = "http://${aws_lb.main.dns_name}"
+}
+
+output "ecs_cluster_name" {
+  value = aws_ecs_cluster.main.name
+}
+
+output "ecs_service_name" {
+  value = aws_ecs_service.app.name
+}
