@@ -46,3 +46,9 @@ variable "desired_count" {
   type        = number
   default     = 2
 }
+
+variable "github_repo" {
+  description = "GitHub-репозиторій (owner/name), якому дозволено деплой через OIDC"
+  type        = string
+  default     = "IhorProkop/cloude-tech-lab1"
+}
