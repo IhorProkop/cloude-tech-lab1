@@ -35,6 +35,12 @@ output "ecs_service_name" {
   value = aws_ecs_service.app.name
 }
 
+# Пароль для POST /login: terraform output -raw auth_password
+output "auth_password" {
+  value     = random_password.auth_password.result
+  sensitive = true
+}
+
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions.arn
 }

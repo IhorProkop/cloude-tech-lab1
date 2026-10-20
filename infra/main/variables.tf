@@ -35,6 +35,12 @@ variable "db_username" {
   default     = "tasks_admin"
 }
 
+variable "auth_user" {
+  description = "Логін для POST /login (пароль генерує Terraform)"
+  type        = string
+  default     = "admin"
+}
+
 variable "image_tag" {
   description = "Тег Docker-образу застосунку в ECR (SHA коміту)"
   type        = string

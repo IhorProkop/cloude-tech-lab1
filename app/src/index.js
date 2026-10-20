@@ -3,6 +3,7 @@
 const express = require('express');
 const { pool, createTable } = require('./db');
 const routes = require('./routes');
+const { login } = require('./auth');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
 
@@ -24,6 +25,9 @@ app.get('/health', async (req, res) => {
     res.status(503).json({ status: 'error' });
   }
 });
+
+// Отримання JWT-токена для захищених ендпоінтів
+app.post('/login', login);
 
 app.use('/tasks', routes);
 

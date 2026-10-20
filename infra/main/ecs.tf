@@ -37,7 +37,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DB_PORT", value = "5432" },
         { name = "DB_NAME", value = var.db_name },
         { name = "DB_USER", value = var.db_username },
-        { name = "DB_SSL", value = "true" }
+        { name = "DB_SSL", value = "true" },
+        { name = "AUTH_USER", value = var.auth_user }
       ]
 
       secrets = [
@@ -45,6 +46,14 @@ resource "aws_ecs_task_definition" "app" {
           name = "DB_PASSWORD"
           # Суфікс :password:: бере з JSON-секрету RDS лише значення ключа password
           valueFrom = "${aws_db_instance.main.master_user_secret[0].secret_arn}:password::"
+        },
+        {
+          name      = "JWT_SECRET"
+          valueFrom = "${aws_secretsmanager_secret.app.arn}:JWT_SECRET::"
+        },
+        {
+          name      = "AUTH_PASSWORD"
+          valueFrom = "${aws_secretsmanager_secret.app.arn}:AUTH_PASSWORD::"
         }
       ]
 

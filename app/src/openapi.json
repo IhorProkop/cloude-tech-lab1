@@ -56,6 +56,40 @@
         }
       }
     },
+    "/login": {
+      "post": {
+        "summary": "Отримати JWT-токен",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Credentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Токен (дійсний 1 годину)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "token": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неправильний логін або пароль",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks": {
       "get": {
         "summary": "Список усіх задач",
@@ -75,6 +109,7 @@
       },
       "post": {
         "summary": "Створити задачу",
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -94,6 +129,14 @@
           },
           "400": {
             "description": "Не передано title",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Немає або недійсний токен",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -143,12 +186,21 @@
       },
       "delete": {
         "summary": "Видалити задачу",
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "204": {
             "description": "Задачу видалено"
           },
           "400": {
             "description": "Некоректний id",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Немає або недійсний токен",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -168,7 +220,22 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
+      "Credentials": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "password": { "type": "string" }
+        }
+      },
       "Task": {
         "type": "object",
         "properties": {

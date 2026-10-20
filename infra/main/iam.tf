@@ -1,5 +1,5 @@
 # IAM-роль виконання ECS: дозволяє агенту ECS тягнути образ з ECR, писати логи в CloudWatch
-# і читати пароль бази із Secrets Manager для передачі в контейнер.
+# і читати секрети із Secrets Manager (пароль бази, JWT-ключ і пароль входу) для передачі в контейнер.
 resource "aws_iam_role" "ecs_execution" {
   name = "${var.project}-ecs-execution"
 
@@ -21,18 +21,21 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Доступ лише до одного секрету — паролю адміна RDS
-resource "aws_iam_role_policy" "read_db_secret" {
-  name = "read-db-secret"
+# Доступ лише до двох секретів: паролю адміна RDS і секретів застосунку
+resource "aws_iam_role_policy" "read_secrets" {
+  name = "read-secrets"
   role = aws_iam_role.ecs_execution.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = aws_db_instance.main.master_user_secret[0].secret_arn
+        Effect = "Allow"
+        Action = "secretsmanager:GetSecretValue"
+        Resource = [
+          aws_db_instance.main.master_user_secret[0].secret_arn,
+          aws_secretsmanager_secret.app.arn
+        ]
       }
     ]
   })
