@@ -1,5 +1,3 @@
-# Вхідні змінні bootstrap-конфігурації.
-# alert_email задається в terraform.tfvars (див. terraform.tfvars.example).
 variable "region" {
   description = "AWS-регіон"
   type        = string

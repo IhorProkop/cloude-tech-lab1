@@ -1,5 +1,3 @@
-# S3-бакет для Terraform state основної конфігурації.
-# Версіонування дозволяє відкотити state, публічний доступ повністю заблоковано.
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "tfstate" {

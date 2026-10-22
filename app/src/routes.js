@@ -1,12 +1,9 @@
-// Ендпоінти REST API для задач (tasks). POST і DELETE потребують JWT-токена (requireAuth).
-// Підключаються в index.js на шлях /tasks, тому тут шляхи відносні: '/' і '/:id'.
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./auth');
 
 const router = express.Router();
 
-// GET /tasks - список усіх задач
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tasks ORDER BY id');
@@ -17,7 +14,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /tasks/:id - одна задача
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid id' });
@@ -33,9 +29,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /tasks - створити задачу, тіло: {"title": "..."}
 router.post('/', requireAuth, async (req, res) => {
-  // ?. - якщо запит прийшов без JSON-тіла, req.body буде undefined
   const title = req.body?.title;
   if (typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required' });
@@ -52,7 +46,6 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE /tasks/:id - видалити задачу
 router.delete('/:id', requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid id' });

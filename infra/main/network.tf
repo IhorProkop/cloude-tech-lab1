@@ -1,5 +1,3 @@
-# Мережа: VPC з двома публічними і двома приватними підмережами у двох AZ.
-# Публічні виходять в інтернет через Internet Gateway, приватні - через NAT Gateway.
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -10,7 +8,6 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Публічні підмережі (для ALB і NAT Gateway)
 resource "aws_subnet" "public_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
@@ -31,7 +28,6 @@ resource "aws_subnet" "public_b" {
   }
 }
 
-# Приватні підмережі (для ECS-задач і RDS), без прямого доступу з інтернету
 resource "aws_subnet" "private_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.11.0/24"
@@ -60,7 +56,6 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Статична публічна IP-адреса для NAT Gateway
 resource "aws_eip" "nat" {
   domain = "vpc"
 
@@ -69,8 +64,6 @@ resource "aws_eip" "nat" {
   }
 }
 
-# NAT Gateway стоїть у публічній підмережі й дає приватним підмережам вихід в інтернет.
-# Один NAT на обидві AZ - дешевше, ніж по одному в кожній.
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public_a.id
@@ -79,7 +72,6 @@ resource "aws_nat_gateway" "main" {
     Name = "${var.project}-nat"
   }
 
-  # NAT потребує вже підключеного до VPC Internet Gateway
   depends_on = [aws_internet_gateway.main]
 }
 
@@ -109,7 +101,6 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Прив'язка кожної підмережі до своєї таблиці маршрутів
 resource "aws_route_table_association" "public_a" {
   subnet_id      = aws_subnet.public_a.id
   route_table_id = aws_route_table.public.id

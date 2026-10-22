@@ -1,5 +1,3 @@
-# Application Load Balancer у публічних підмережах: приймає HTTP на порту 80
-# і розподіляє запити між ECS-задачами в приватних підмережах.
 resource "aws_lb" "main" {
   name               = "${var.project}-alb"
   load_balancer_type = "application"
@@ -12,7 +10,6 @@ resource "aws_lb" "main" {
   }
 }
 
-# target_type "ip", бо задачі Fargate в режимі awsvpc мають власні IP, а не EC2-інстанси
 resource "aws_lb_target_group" "app" {
   name        = "${var.project}-app-tg"
   port        = 3000
@@ -28,7 +25,7 @@ resource "aws_lb_target_group" "app" {
     unhealthy_threshold = 3
   }
 
-  deregistration_delay = 10 # секунд; менше за дефолтні 300, щоб деплой був швидшим
+  deregistration_delay = 10
 
   tags = {
     Name = "${var.project}-app-tg"

@@ -1,5 +1,3 @@
-// Підключення до PostgreSQL: пул з'єднань і створення таблиці tasks.
-// Усі налаштування беруться лише зі змінних середовища.
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -8,7 +6,6 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  // Хмарні БД вимагають SSL; локальний контейнер - ні.
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 

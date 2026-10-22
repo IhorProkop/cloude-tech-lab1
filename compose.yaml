@@ -1,4 +1,3 @@
-# Локальний запуск: застосунок + PostgreSQL.
 services:
   db:
     image: postgres:17.11-alpine

@@ -1,7 +1,3 @@
-# CI/CD: GitHub Actions отримує тимчасові AWS-креденшели через OIDC, без збережених ключів доступу.
-# Роль може взяти лише workflow з гілки main нашого репозиторію, і права в неї - тільки на деплой.
-
-# thumbprint_list не вказуємо: у провайдері aws v6 він необов'язковий, AWS сам перевіряє сертифікат GitHub
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -36,7 +32,6 @@ resource "aws_iam_role_policy" "github_deploy" {
     Version = "2012-10-17"
     Statement = [
       {
-        # GetAuthorizationToken не прив'язується до конкретного репозиторію, тому інакше цю дію не обмежити
         Effect   = "Allow"
         Action   = "ecr:GetAuthorizationToken"
         Resource = "*"
@@ -55,7 +50,6 @@ resource "aws_iam_role_policy" "github_deploy" {
         Resource = aws_ecr_repository.app.arn
       },
       {
-        # Ці дії ECS не підтримують обмеження ресурсом
         Effect = "Allow"
         Action = [
           "ecs:DescribeTaskDefinition",
@@ -72,7 +66,6 @@ resource "aws_iam_role_policy" "github_deploy" {
         Resource = aws_ecs_service.app.arn
       },
       {
-        # Нова ревізія task definition посилається на роль виконання, тож її треба дозволити передати в ECS
         Effect   = "Allow"
         Action   = "iam:PassRole"
         Resource = aws_iam_role.ecs_execution.arn

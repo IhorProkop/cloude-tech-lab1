@@ -1,4 +1,3 @@
-# Вхідні змінні основної конфігурації.
 variable "region" {
   description = "AWS-регіон"
   type        = string
@@ -53,8 +52,6 @@ variable "desired_count" {
   default     = 2
 }
 
-# GitHub включає в OIDC-claim sub незмінні числові ID власника і репозиторію (формат owner@id/repo@id).
-# Прив'язуємо роль саме до них, бо назву можна перейменувати або зайняти після видалення.
 variable "github_repo" {
   description = "GitHub-репозиторій (owner@id/name@id), якому дозволено деплой через OIDC"
   type        = string

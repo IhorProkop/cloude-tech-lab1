@@ -1,2 +1,1 @@
-# Скопіюйте у terraform.tfvars і вкажіть свою адресу (terraform.tfvars не комітиться).
 alert_email = "you@example.com"

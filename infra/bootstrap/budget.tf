@@ -1,5 +1,3 @@
-# Місячний бюджет на витрати AWS з email-сповіщеннями:
-# фактичні 50% і 80% ліміту та прогноз 100%.
 resource "aws_budgets_budget" "monthly" {
   name         = "cloude-tech-lab1-monthly"
   budget_type  = "COST"

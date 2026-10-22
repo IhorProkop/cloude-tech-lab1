@@ -1,7 +1,3 @@
-# Моніторинг у CloudWatch: алярми на помилки 5xx і непрацюючі задачі за ALB
-# (сповіщення на email через SNS) і дашборд з основними метриками ALB та ECS.
-
-# Після apply AWS надішле на alert_email лист - підписку треба підтвердити за посиланням з нього
 resource "aws_sns_topic" "alerts" {
   name = "${var.project}-alerts"
 }
@@ -12,8 +8,6 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alert_email
 }
 
-# Хоча б одна відповідь 5xx від застосунку за хвилину.
-# notBreaching: немає запитів - немає даних - алярм у стані OK.
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   alarm_name          = "${var.project}-alb-5xx"
   alarm_description   = "Application returned 5xx responses"
@@ -30,7 +24,6 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 }
 
-# Хоча б одна задача не проходить health check дві хвилини поспіль
 resource "aws_cloudwatch_metric_alarm" "unhealthy_targets" {
   alarm_name        = "${var.project}-unhealthy-targets"
   alarm_description = "ALB has unhealthy ECS targets"
@@ -50,8 +43,6 @@ resource "aws_cloudwatch_metric_alarm" "unhealthy_targets" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 }
 
-# Дашборд: сітка шириною 24 одиниці, по два віджети в ряд.
-# Метрика в віджеті записується масивом: [namespace, назва, вимір, значення, ..., { параметри }].
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = var.project
 

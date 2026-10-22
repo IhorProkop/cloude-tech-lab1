@@ -1,5 +1,3 @@
-# ECS Fargate: кластер, опис задачі (контейнер застосунку) і сервіс,
-# що тримає потрібну кількість задач за ALB у приватних підмережах.
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project}"
   retention_in_days = 7
@@ -17,7 +15,6 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_execution.arn
 
-  # Значення змінних оточення в ECS мають бути рядками, тому числа в лапках
   container_definitions = jsonencode([
     {
       name      = "app"
@@ -43,8 +40,7 @@ resource "aws_ecs_task_definition" "app" {
 
       secrets = [
         {
-          name = "DB_PASSWORD"
-          # Суфікс :password:: бере з JSON-секрету RDS лише значення ключа password
+          name      = "DB_PASSWORD"
           valueFrom = "${aws_db_instance.main.master_user_secret[0].secret_arn}:password::"
         },
         {
@@ -80,7 +76,7 @@ resource "aws_ecs_service" "app" {
   network_configuration {
     subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
     security_groups  = [aws_security_group.app.id]
-    assign_public_ip = false # вихід в інтернет через NAT
+    assign_public_ip = false
   }
 
   load_balancer {
@@ -89,17 +85,14 @@ resource "aws_ecs_service" "app" {
     container_port   = 3000
   }
 
-  # Якщо нові задачі не стають здоровими, деплой зупиняється і відкочується на попередню ревізію
   deployment_circuit_breaker {
     enable   = true
     rollback = true
   }
 
-  # Нові ревізії task definition реєструє і деплоїть CI, тож Terraform їх не відкочує
   lifecycle {
     ignore_changes = [task_definition]
   }
 
-  # Target group має бути прив'язана до ALB через listener до створення сервісу
   depends_on = [aws_lb_listener.http]
 }

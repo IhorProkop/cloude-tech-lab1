@@ -1,4 +1,3 @@
-# Вихідні значення: знадобляться для наступних етапів (ECS, ALB, RDS) і для docker push.
 output "vpc_id" {
   value = aws_vpc.main.id
 }
@@ -16,7 +15,7 @@ output "ecr_repository_url" {
 }
 
 output "db_endpoint" {
-  value = aws_db_instance.main.address # лише хост, без порту
+  value = aws_db_instance.main.address
 }
 
 output "db_secret_arn" {
@@ -35,7 +34,6 @@ output "ecs_service_name" {
   value = aws_ecs_service.app.name
 }
 
-# Пароль для POST /login: terraform output -raw auth_password
 output "auth_password" {
   value     = random_password.auth_password.result
   sensitive = true

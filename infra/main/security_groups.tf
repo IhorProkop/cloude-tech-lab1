@@ -1,6 +1,3 @@
-# Security groups: ланцюжок доступу інтернет -> ALB -> застосунок -> база.
-# Кожен рівень приймає трафік лише від попереднього.
-# description у SG AWS приймає лише ASCII, тому він англійською.
 resource "aws_security_group" "alb" {
   name        = "${var.project}-alb-sg"
   description = "ALB: HTTP from the internet"
@@ -18,7 +15,7 @@ resource "aws_security_group" "alb" {
     description = "All outbound traffic"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # усі протоколи
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -40,7 +37,6 @@ resource "aws_security_group" "app" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # Вихід потрібен для ECR, Secrets Manager, CloudWatch (через NAT) і для бази
   egress {
     description = "All outbound traffic"
     from_port   = 0
@@ -66,9 +62,6 @@ resource "aws_security_group" "db" {
     protocol        = "tcp"
     security_groups = [aws_security_group.app.id]
   }
-
-  # Egress-правил немає: SG stateful, тож відповіді на вхідні з'єднання пропускаються автоматично.
-  # Terraform при створенні SG прибирає дефолтне правило AWS "allow all egress".
 
   tags = {
     Name = "${var.project}-db-sg"

@@ -1,5 +1,3 @@
-// Точка входу: створює Express-застосунок, підключає маршрути,
-// створює таблицю в БД і запускає HTTP-сервер.
 const express = require('express');
 const { pool, createTable } = require('./db');
 const routes = require('./routes');
@@ -16,7 +14,6 @@ app.get('/', (req, res) => {
   res.json({ name: 'Tasks API', version: '1.0' });
 });
 
-// Перевірка стану: застосунок живий і база даних відповідає
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -26,12 +23,10 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Отримання JWT-токена для захищених ендпоінтів
 app.post('/login', login);
 
 app.use('/tasks', routes);
 
-// Документація API: Swagger UI за специфікацією з openapi.json
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 createTable()

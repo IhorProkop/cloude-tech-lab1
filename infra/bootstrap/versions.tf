@@ -1,5 +1,3 @@
-# Версії Terraform і провайдера AWS.
-# State цієї конфігурації - локальний (backend-блоку немає навмисно).
 terraform {
   required_version = ">= 1.16.0"
 
