@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "1.0"
+    "version": "2.0"
   },
   "servers": [{ "url": "/" }],
   "paths": {
