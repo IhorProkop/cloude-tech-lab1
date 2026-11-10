@@ -4,3 +4,4 @@ node_modules/
 .terraform/
 *.tfstate*
 *.tfplan
+loadtest/results/*.log
