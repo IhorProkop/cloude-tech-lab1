@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "2.0"
+    "version": "3.0"
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -92,10 +92,16 @@
     },
     "/tasks": {
       "get": {
-        "summary": "Список усіх задач",
+        "summary": "Останні 50 задач, новіші першими",
         "responses": {
           "200": {
-            "description": "Масив задач",
+            "description": "Масив задач (не більше 50)",
+            "headers": {
+              "X-Cache": {
+                "description": "HIT - відповідь з Redis, MISS - з бази і записано в кеш, BYPASS - кеш вимкнено або Redis недоступний",
+                "schema": { "type": "string", "enum": ["HIT", "MISS", "BYPASS"] }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -217,6 +223,29 @@
           }
         }
       }
+    },
+    "/authors/{username}": {
+      "parameters": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "example": "admin" }
+        }
+      ],
+      "get": {
+        "summary": "Дані автора: кількість задач і час останньої",
+        "responses": {
+          "200": {
+            "description": "Дані автора (для автора без задач taskCount = 0, lastTaskAt = null)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Author" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -242,7 +271,8 @@
           "id": { "type": "integer", "example": 1 },
           "title": { "type": "string", "example": "Купити молоко" },
           "done": { "type": "boolean", "example": false },
-          "created_at": { "type": "string", "format": "date-time" }
+          "created_at": { "type": "string", "format": "date-time" },
+          "author": { "type": "string", "nullable": true, "example": "admin" }
         }
       },
       "NewTask": {
@@ -250,6 +280,14 @@
         "required": ["title"],
         "properties": {
           "title": { "type": "string", "example": "Купити молоко" }
+        }
+      },
+      "Author": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "taskCount": { "type": "integer", "example": 12 },
+          "lastTaskAt": { "type": "string", "format": "date-time", "nullable": true }
         }
       },
       "Error": {

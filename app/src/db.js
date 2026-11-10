@@ -18,6 +18,8 @@ async function createTable() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
+  await pool.query('ALTER TABLE tasks ADD COLUMN IF NOT EXISTS author TEXT');
+  await pool.query('CREATE INDEX IF NOT EXISTS tasks_author_idx ON tasks (author)');
 }
 
 module.exports = { pool, createTable };
