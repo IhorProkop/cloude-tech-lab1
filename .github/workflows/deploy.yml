@@ -43,8 +43,16 @@ jobs:
         env:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
         run: |
-          docker build -t "$IMAGE" ./app
-          docker push "$IMAGE"
+          existing=$(aws ecr batch-get-image \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$GITHUB_SHA" \
+            --query 'length(images)' --output text)
+          if [ "$existing" = "0" ]; then
+            docker build -t "$IMAGE" ./app
+            docker push "$IMAGE"
+          else
+            echo "Image $IMAGE already exists, skipping build"
+          fi
           echo "uri=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Download current task definition
