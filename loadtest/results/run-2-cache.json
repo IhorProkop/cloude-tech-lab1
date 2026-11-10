@@ -1,0 +1,66 @@
+{
+  "run": "run-2-cache",
+  "vus": 300,
+  "stages": {
+    "rampUp": "3m",
+    "steady": "5m",
+    "rampDown": "2m"
+  },
+  "thinkTimeSeconds": 0.2,
+  "phasesUtc": {
+    "rampUpStart": "2026-11-10T23:19:38.068Z",
+    "steadyStart": "2026-11-10T23:22:38.068Z",
+    "rampDownStart": "2026-11-10T23:27:38.068Z",
+    "end": "2026-11-10T23:29:38.068Z"
+  },
+  "durationSeconds": 601.05,
+  "iterations": 48436,
+  "requests": 484359,
+  "requestsPerSecond": 805.86,
+  "errorRate": 0.000004129168653829082,
+  "failedRequests": 2,
+  "checksPassRate": 0.9999958708228212,
+  "latencyMs": {
+    "avg": 79.07,
+    "p50": 45.44,
+    "p90": 201.06,
+    "p95": 240.96,
+    "p99": 310.79,
+    "max": 692.12
+  },
+  "endpointsLatencyMs": {
+    "POST /tasks": {
+      "avg": 86.81,
+      "p50": 55.75,
+      "p90": 210.37,
+      "p95": 242.68,
+      "p99": 306.01,
+      "max": 540.1
+    },
+    "GET /tasks": {
+      "avg": 73.7,
+      "p50": 33.95,
+      "p90": 198.76,
+      "p95": 251.18,
+      "p99": 322.82,
+      "max": 557.6
+    },
+    "GET /tasks/:id": {
+      "avg": 77.85,
+      "p50": 46.68,
+      "p90": 195.01,
+      "p95": 227.72,
+      "p99": 293.01,
+      "max": 496.64
+    },
+    "GET /authors/:username": {
+      "avg": 97.71,
+      "p50": 69.62,
+      "p90": 216.79,
+      "p95": 251.13,
+      "p99": 316.09,
+      "max": 692.12
+    }
+  },
+  "tasksListCacheHitRate": 0.530396
+}
