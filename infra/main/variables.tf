@@ -47,9 +47,44 @@ variable "image_tag" {
 }
 
 variable "desired_count" {
-  description = "Кількість ECS-задач застосунку"
+  description = "Початкова кількість ECS-задач застосунку (далі нею керує автомасштабування)"
   type        = number
-  default     = 2
+  default     = 1
+}
+
+variable "autoscaling_min_capacity" {
+  description = "Мінімальна кількість задач застосунку"
+  type        = number
+  default     = 1
+}
+
+variable "autoscaling_max_capacity" {
+  description = "Максимальна кількість задач застосунку"
+  type        = number
+  default     = 4
+
+  validation {
+    condition     = var.autoscaling_max_capacity <= 4
+    error_message = "За умовою лабораторної максимум не більше 4 задач."
+  }
+}
+
+variable "autoscaling_cpu_target" {
+  description = "Цільове середнє завантаження CPU сервісу, %"
+  type        = number
+  default     = 60
+}
+
+variable "autoscaling_scale_out_cooldown" {
+  description = "Період стабілізації після додавання задач, с"
+  type        = number
+  default     = 60
+}
+
+variable "autoscaling_scale_in_cooldown" {
+  description = "Період стабілізації після вилучення задач, с"
+  type        = number
+  default     = 300
 }
 
 variable "github_repo" {
