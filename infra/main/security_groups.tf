@@ -50,6 +50,32 @@ resource "aws_security_group" "app" {
   }
 }
 
+resource "aws_security_group" "redis" {
+  name        = "${var.project}-redis-sg"
+  description = "Redis (ECS task): port 6379 from app only"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Redis from app"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project}-redis-sg"
+  }
+}
+
 resource "aws_security_group" "db" {
   name        = "${var.project}-db-sg"
   description = "RDS PostgreSQL: port 5432 from app only"

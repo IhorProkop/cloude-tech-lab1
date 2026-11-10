@@ -87,6 +87,18 @@ variable "autoscaling_scale_in_cooldown" {
   default     = 300
 }
 
+variable "redis_image_tag" {
+  description = "Тег образу Redis з public.ecr.aws/docker/library/redis"
+  type        = string
+  default     = "8.10.3-alpine"
+}
+
+variable "cache_enabled" {
+  description = "Чи використовує застосунок Redis-кеш для GET /tasks"
+  type        = bool
+  default     = false
+}
+
 variable "github_repo" {
   description = "GitHub-репозиторій (owner@id/name@id), якому дозволено деплой через OIDC"
   type        = string
