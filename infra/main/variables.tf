@@ -94,9 +94,20 @@ variable "redis_image_tag" {
 }
 
 variable "cache_enabled" {
-  description = "Чи використовує застосунок Redis-кеш для GET /tasks"
+  description = "Чи використовує застосунок Redis-кеш для GET /tasks і GET /authors/:username"
   type        = bool
   default     = false
+}
+
+variable "author_cache_ttl_seconds" {
+  description = "TTL кешу GET /authors/:username у Redis, с (без інвалідації на POST/DELETE)"
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.author_cache_ttl_seconds >= 1 && floor(var.author_cache_ttl_seconds) == var.author_cache_ttl_seconds
+    error_message = "TTL має бути цілим числом секунд, не менше 1."
+  }
 }
 
 variable "github_repo" {

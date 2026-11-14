@@ -27,6 +27,9 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
+    environment:
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-30}
+      AUTHOR_CACHE_TTL_SECONDS: ${AUTHOR_CACHE_TTL_SECONDS:-5}
     depends_on:
       db:
         condition: service_healthy

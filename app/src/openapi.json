@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "3.0"
+    "version": "3.1"
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -97,10 +97,8 @@
           "200": {
             "description": "Масив задач (не більше 50)",
             "headers": {
-              "X-Cache": {
-                "description": "HIT - відповідь з Redis, MISS - з бази і записано в кеш, BYPASS - кеш вимкнено або Redis недоступний",
-                "schema": { "type": "string", "enum": ["HIT", "MISS", "BYPASS"] }
-              }
+              "X-Cache": { "$ref": "#/components/headers/X-Cache" },
+              "X-Cache-Coalesced": { "$ref": "#/components/headers/X-Cache-Coalesced" }
             },
             "content": {
               "application/json": {
@@ -235,9 +233,14 @@
       ],
       "get": {
         "summary": "Дані автора: кількість задач і час останньої",
+        "description": "Відповідь кешується в Redis на AUTHOR_CACHE_TTL_SECONDS (за замовчуванням 5 с) без інвалідації на POST і DELETE, тому дані можуть відставати на кілька секунд.",
         "responses": {
           "200": {
             "description": "Дані автора (для автора без задач taskCount = 0, lastTaskAt = null)",
+            "headers": {
+              "X-Cache": { "$ref": "#/components/headers/X-Cache" },
+              "X-Cache-Coalesced": { "$ref": "#/components/headers/X-Cache-Coalesced" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Author" }
@@ -249,6 +252,16 @@
     }
   },
   "components": {
+    "headers": {
+      "X-Cache": {
+        "description": "HIT - відповідь з Redis, MISS - з бази і записано в кеш, BYPASS - кеш вимкнено або Redis недоступний",
+        "schema": { "type": "string", "enum": ["HIT", "MISS", "BYPASS"] }
+      },
+      "X-Cache-Coalesced": {
+        "description": "Є лише тоді, коли запит не ходив у базу сам, а дочекався результату такого самого запиту, який уже виконувався в цьому процесі (single-flight)",
+        "schema": { "type": "string", "enum": ["true"] }
+      }
+    },
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",

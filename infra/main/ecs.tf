@@ -42,7 +42,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DB_SSL", value = "true" },
         { name = "AUTH_USER", value = var.auth_user },
         { name = "REDIS_URL", value = "redis://${aws_service_discovery_service.redis.name}.${aws_service_discovery_private_dns_namespace.main.name}:6379" },
-        { name = "CACHE_ENABLED", value = tostring(var.cache_enabled) }
+        { name = "CACHE_ENABLED", value = tostring(var.cache_enabled) },
+        { name = "AUTHOR_CACHE_TTL_SECONDS", value = tostring(var.author_cache_ttl_seconds) }
       ]
 
       secrets = [
