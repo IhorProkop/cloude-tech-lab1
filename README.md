@@ -88,9 +88,12 @@ curl -X DELETE http://localhost:3000/tasks/1 -H "Authorization: Bearer $TOKEN"
 
 - [docs/AUTOSCALING.md](docs/AUTOSCALING.md) - політика масштабування за CPU (1-4 задачі, ціль 60%), cooldown, знімки
   панелі під час навантаження;
-- [docs/LOADTEST.md](docs/LOADTEST.md) - сценарій k6 і результати двох прогонів;
+- [docs/LOADTEST.md](docs/LOADTEST.md) - сценарій k6 і результати трьох прогонів;
+- [docs/ITERATIONS.md](docs/ITERATIONS.md) - усі ітерації по порядку: калібрування, прогін без кешу, з кешем і
+  з виправленнями (keep-alive, кеш даних автора, single-flight), що побачили і яке рішення прийняли;
 - [docs/ALERTS.md](docs/ALERTS.md) - alarm «CPU > 70% протягом 2 хв» з листами на email, час реакції;
-- [docs/CACHE.md](docs/CACHE.md) - cache-aside для `GET /tasks` на Redis, порівняння без кешу і з кешем;
+- [docs/CACHE.md](docs/CACHE.md) - cache-aside для `GET /tasks` і `GET /authors/:username` на Redis, single-flight,
+  порівняння трьох прогонів;
 - [loadtest/](loadtest/README.md) - сценарій навантаження, запуск однією командою:
 
 ```powershell
@@ -98,5 +101,6 @@ curl -X DELETE http://localhost:3000/tasks/1 -H "Authorization: Bearer $TOKEN"
 ```
 
 Нове в застосунку: `GET /tasks` повертає останні 50 задач і заголовок `X-Cache`, `GET /authors/:username` -
-кількість задач автора і час останньої, коректне завершення за SIGTERM. Кеш вмикається змінною Terraform
-`cache_enabled` (за замовчуванням `false`).
+кількість задач автора і час останньої (кешується на 5 с, `author_cache_ttl_seconds`), коректне завершення
+за SIGTERM, keep-alive 65 с (довше за idle timeout ALB). Кеш вмикається змінною Terraform `cache_enabled`
+(за замовчуванням `false`).
