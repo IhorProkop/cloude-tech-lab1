@@ -32,10 +32,10 @@ async function read(key) {
   }
 }
 
-function write(key, value) {
+function write(key, value, ttl = ttlSeconds) {
   if (!client?.isReady) return;
   client
-    .set(key, value, { expiration: { type: 'EX', value: ttlSeconds } })
+    .set(key, value, { expiration: { type: 'EX', value: ttl } })
     .catch((err) => console.error('Redis write failed:', err.message));
 }
 
