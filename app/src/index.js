@@ -10,6 +10,15 @@ const openapi = require('./openapi.json');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SHUTDOWN_TIMEOUT_MS = 10000;
+const IDLE_SWEEP_INTERVAL_MS = 500;
+
+let server = null;
+let shuttingDown = false;
+
+app.use((req, res, next) => {
+  if (shuttingDown) res.set('Connection', 'close');
+  next();
+});
 
 app.use(express.json());
 
@@ -32,9 +41,6 @@ app.use('/tasks', routes);
 app.use('/authors', authors);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
-
-let server = null;
-let shuttingDown = false;
 
 async function closeConnections() {
   const results = await Promise.allSettled([pool.end(), cache.close()]);
@@ -63,6 +69,7 @@ function shutdown(signal) {
     process.exit(0);
   });
   server.closeIdleConnections();
+  setInterval(() => server.closeIdleConnections(), IDLE_SWEEP_INTERVAL_MS).unref();
 }
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
@@ -73,6 +80,8 @@ createTable()
     server = app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
     });
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
   })
   .catch((err) => {
     console.error('Failed to create table:', err);
