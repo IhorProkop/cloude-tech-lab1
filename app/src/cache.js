@@ -32,14 +32,36 @@ async function read(key) {
   }
 }
 
-function write(key, value, ttl = ttlSeconds) {
+function write(key, value, ttl) {
   if (!client?.isReady) return;
   client
     .set(key, value, { expiration: { type: 'EX', value: ttl } })
     .catch((err) => console.error('Redis write failed:', err.message));
 }
 
+const inFlight = new Map();
+
+async function getOrLoad(key, ttl, load) {
+  const cached = await read(key);
+  if (cached.status === 'HIT') return { status: 'HIT', body: cached.value, coalesced: false };
+
+  const pending = inFlight.get(key);
+  if (pending) return { status: cached.status, body: await pending, coalesced: true };
+
+  const flight = load()
+    .then((body) => {
+      if (cached.status === 'MISS' && inFlight.get(key) === flight) write(key, body, ttl);
+      return body;
+    })
+    .finally(() => {
+      if (inFlight.get(key) === flight) inFlight.delete(key);
+    });
+  inFlight.set(key, flight);
+  return { status: cached.status, body: await flight, coalesced: false };
+}
+
 async function remove(key) {
+  inFlight.delete(key);
   if (!client?.isReady) return;
   try {
     await client.del(key);
@@ -53,4 +75,4 @@ async function close() {
   await client.close();
 }
 
-module.exports = { read, write, remove, close };
+module.exports = { ttlSeconds, getOrLoad, remove, close };

@@ -8,19 +8,19 @@ const RECENT_TASKS_LIMIT = 50;
 
 const router = express.Router();
 
+async function loadRecentTasks() {
+  const result = await pool.query('SELECT * FROM tasks ORDER BY id DESC LIMIT $1', [
+    RECENT_TASKS_LIMIT,
+  ]);
+  return JSON.stringify(result.rows);
+}
+
 router.get('/', async (req, res) => {
-  const cached = await cache.read(RECENT_TASKS_KEY);
-  res.set('X-Cache', cached.status);
-  if (cached.status === 'HIT') {
-    return res.type('application/json').send(cached.value);
-  }
   try {
-    const result = await pool.query('SELECT * FROM tasks ORDER BY id DESC LIMIT $1', [
-      RECENT_TASKS_LIMIT,
-    ]);
-    const body = JSON.stringify(result.rows);
-    if (cached.status === 'MISS') cache.write(RECENT_TASKS_KEY, body);
-    res.type('application/json').send(body);
+    const result = await cache.getOrLoad(RECENT_TASKS_KEY, cache.ttlSeconds, loadRecentTasks);
+    res.set('X-Cache', result.status);
+    if (result.coalesced) res.set('X-Cache-Coalesced', 'true');
+    res.type('application/json').send(result.body);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
