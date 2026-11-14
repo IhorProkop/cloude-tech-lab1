@@ -14,6 +14,9 @@ const RUN_NAME = __ENV.RUN_NAME || 'local';
 const SUMMARY_PATH = __ENV.SUMMARY_PATH || `results/${RUN_NAME}.json`;
 
 const tasksListCacheHit = new Rate('tasks_list_cache_hit');
+const tasksListCoalesced = new Rate('tasks_list_coalesced');
+const authorCacheHit = new Rate('author_cache_hit');
+const authorCoalesced = new Rate('author_coalesced');
 const createTaskDuration = new Trend('endpoint_post_tasks', true);
 const tasksListDuration = new Trend('endpoint_get_tasks', true);
 const taskByIdDuration = new Trend('endpoint_get_task_by_id', true);
@@ -61,6 +64,7 @@ function readTasksList() {
   const res = http.get(`${BASE_URL}/tasks`, { tags: { name: 'GET /tasks' } });
   tasksListDuration.add(res.timings.duration);
   tasksListCacheHit.add(res.headers['X-Cache'] === 'HIT');
+  tasksListCoalesced.add(res.headers['X-Cache-Coalesced'] === 'true');
   check(res, { 'GET /tasks is 200': (r) => r.status === 200 });
   think();
   return res.status === 200 ? res.json().map((task) => task.id) : [];
@@ -79,6 +83,8 @@ function readAuthor() {
     tags: { name: 'GET /authors/:username' },
   });
   authorDuration.add(res.timings.duration);
+  authorCacheHit.add(res.headers['X-Cache'] === 'HIT');
+  authorCoalesced.add(res.headers['X-Cache-Coalesced'] === 'true');
   check(res, { 'GET /authors/:username is 200': (r) => r.status === 200 });
   think();
 }
@@ -115,6 +121,10 @@ export default function (data) {
 
 function round(value) {
   return Math.round(value * 100) / 100;
+}
+
+function rate(metric) {
+  return metric ? round(metric.values.rate * 10000) / 10000 : null;
 }
 
 function percentiles(metric) {
@@ -175,9 +185,10 @@ export function handleSummary(data) {
       'GET /tasks/:id': percentiles(metrics.endpoint_get_task_by_id),
       'GET /authors/:username': percentiles(metrics.endpoint_get_author),
     },
-    tasksListCacheHitRate: metrics.tasks_list_cache_hit
-      ? round(metrics.tasks_list_cache_hit.values.rate * 10000) / 10000
-      : null,
+    tasksListCacheHitRate: rate(metrics.tasks_list_cache_hit),
+    tasksListCoalescedRate: rate(metrics.tasks_list_coalesced),
+    authorCacheHitRate: rate(metrics.author_cache_hit),
+    authorCoalescedRate: rate(metrics.author_coalesced),
   };
   const json = JSON.stringify(summary, null, 2);
   return {
