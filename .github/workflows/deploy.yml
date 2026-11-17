@@ -20,6 +20,9 @@ env:
   ECS_SERVICE: cloude-tech-lab1-app
   TASK_FAMILY: cloude-tech-lab1-app
   CONTAINER_NAME: app
+  WORKER_SERVICE: cloude-tech-lab1-worker
+  WORKER_TASK_FAMILY: cloude-tech-lab1-worker
+  WORKER_CONTAINER_NAME: worker
 
 jobs:
   deploy:
@@ -61,7 +64,7 @@ jobs:
             --task-definition "$TASK_FAMILY" \
             --query taskDefinition > task-def.json
 
-      - name: Put new image into task definition
+      - name: Put new image into app task definition
         id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -69,10 +72,30 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.image.outputs.uri }}
 
-      - name: Register task definition and update service
+      - name: Register app task definition and update app service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render.outputs.task-definition }}
           cluster: ${{ env.ECS_CLUSTER }}
           service: ${{ env.ECS_SERVICE }}
+          wait-for-service-stability: true
+
+      - name: Download current worker task definition
+        run: |
+          aws ecs describe-task-definition --task-definition "$WORKER_TASK_FAMILY" --query taskDefinition > worker-task-def.json
+
+      - name: Put new image into worker task definition
+        id: render-worker
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: worker-task-def.json
+          container-name: ${{ env.WORKER_CONTAINER_NAME }}
+          image: ${{ steps.image.outputs.uri }}
+
+      - name: Register worker task definition and update worker service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-worker.outputs.task-definition }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.WORKER_SERVICE }}
           wait-for-service-stability: true
