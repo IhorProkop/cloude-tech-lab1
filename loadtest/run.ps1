@@ -6,7 +6,8 @@ param(
     [string]$RampDown = "2m",
     [double]$ThinkTime = 0.2,
     [string]$SecretId = "cloude-tech-lab1-app-secrets",
-    [string]$AuthUser = "admin"
+    [string]$AuthUser = "admin",
+    [string]$Script = "script.js"
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,7 +15,8 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $infraDir = Join-Path $repoRoot "infra\main"
 $resultsDir = Join-Path $PSScriptRoot "results"
-$scriptPath = Join-Path $PSScriptRoot "script.js"
+$scriptPath = Join-Path $PSScriptRoot $Script
+if (-not (Test-Path $scriptPath)) { throw "Scenario $Script not found in $PSScriptRoot" }
 New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
 
 $k6 = Get-Command k6 -ErrorAction SilentlyContinue
