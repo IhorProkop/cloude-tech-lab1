@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | Метрика | `ECSServiceAverageCPUUtilization` - середній CPU усіх задач сервісу | - |
 | Цільове значення | 60% | `autoscaling_cpu_target` |
-| Мінімум задач | 1 | `autoscaling_min_capacity` |
+| Мінімум задач | 1 (з бонусу 8 - за розкладом: 2 вдень, 1 вночі, див. [SCHEDULE.md](SCHEDULE.md)) | `autoscaling_min_capacity` |
 | Максимум задач | 4 (validation не дає поставити більше) | `autoscaling_max_capacity` |
 | Cooldown після додавання | 60 с | `autoscaling_scale_out_cooldown` |
 | Cooldown після вилучення | 300 с | `autoscaling_scale_in_cooldown` |

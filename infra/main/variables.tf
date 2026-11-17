@@ -87,6 +87,46 @@ variable "autoscaling_scale_in_cooldown" {
   default     = 300
 }
 
+variable "schedule_timezone" {
+  description = "Часовий пояс для розкладу мінімальної кількості задач (IANA)"
+  type        = string
+  default     = "Europe/Kyiv"
+}
+
+variable "schedule_day_cron" {
+  description = "Коли починається денний режим: cron Application Auto Scaling у schedule_timezone"
+  type        = string
+  default     = "cron(0 8 * * ? *)"
+}
+
+variable "schedule_night_cron" {
+  description = "Коли починається нічний режим: cron Application Auto Scaling у schedule_timezone"
+  type        = string
+  default     = "cron(0 22 * * ? *)"
+}
+
+variable "schedule_day_min_capacity" {
+  description = "Мінімальна кількість задач застосунку вдень"
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = var.schedule_day_min_capacity >= 1 && var.schedule_day_min_capacity <= var.autoscaling_max_capacity
+    error_message = "Денний мінімум має бути від 1 до autoscaling_max_capacity."
+  }
+}
+
+variable "schedule_night_min_capacity" {
+  description = "Мінімальна кількість задач застосунку вночі"
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.schedule_night_min_capacity >= 1 && var.schedule_night_min_capacity <= var.autoscaling_max_capacity
+    error_message = "Нічний мінімум має бути від 1 до autoscaling_max_capacity: ECS за ALB не запускає задачу на запит, без задачі ALB відповідає 503."
+  }
+}
+
 variable "redis_image_tag" {
   description = "Тег образу Redis з public.ecr.aws/docker/library/redis"
   type        = string

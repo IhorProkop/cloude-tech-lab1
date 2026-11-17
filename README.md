@@ -104,3 +104,8 @@ curl -X DELETE http://localhost:3000/tasks/1 -H "Authorization: Bearer $TOKEN"
 кількість задач автора і час останньої (кешується на 5 с, `author_cache_ttl_seconds`), коректне завершення
 за SIGTERM, keep-alive 65 с (довше за idle timeout ALB). Кеш вмикається змінною Terraform `cache_enabled`
 (за замовчуванням `false`).
+
+## Бонусні завдання лабораторної роботи 2
+
+- [docs/SCHEDULE.md](docs/SCHEDULE.md) - мінімум задач за розкладом (2 з 08:00 до 22:00 за Києвом, 1 вночі),
+  чому не 0, економія за місяць і перевірка спрацювання;

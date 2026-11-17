@@ -4,6 +4,10 @@ resource "aws_appautoscaling_target" "app" {
   scalable_dimension = "ecs:service:DesiredCount"
   min_capacity       = var.autoscaling_min_capacity
   max_capacity       = var.autoscaling_max_capacity
+
+  lifecycle {
+    ignore_changes = [min_capacity]
+  }
 }
 
 resource "aws_appautoscaling_policy" "app_cpu" {
@@ -22,4 +26,34 @@ resource "aws_appautoscaling_policy" "app_cpu" {
     scale_out_cooldown = var.autoscaling_scale_out_cooldown
     scale_in_cooldown  = var.autoscaling_scale_in_cooldown
   }
+}
+
+resource "aws_appautoscaling_scheduled_action" "app_day" {
+  name               = "${var.project}-day-min-capacity"
+  service_namespace  = aws_appautoscaling_target.app.service_namespace
+  resource_id        = aws_appautoscaling_target.app.resource_id
+  scalable_dimension = aws_appautoscaling_target.app.scalable_dimension
+  schedule           = var.schedule_day_cron
+  timezone           = var.schedule_timezone
+
+  scalable_target_action {
+    min_capacity = var.schedule_day_min_capacity
+    max_capacity = var.autoscaling_max_capacity
+  }
+}
+
+resource "aws_appautoscaling_scheduled_action" "app_night" {
+  name               = "${var.project}-night-min-capacity"
+  service_namespace  = aws_appautoscaling_target.app.service_namespace
+  resource_id        = aws_appautoscaling_target.app.resource_id
+  scalable_dimension = aws_appautoscaling_target.app.scalable_dimension
+  schedule           = var.schedule_night_cron
+  timezone           = var.schedule_timezone
+
+  scalable_target_action {
+    min_capacity = var.schedule_night_min_capacity
+    max_capacity = var.autoscaling_max_capacity
+  }
+
+  depends_on = [aws_appautoscaling_scheduled_action.app_day]
 }
