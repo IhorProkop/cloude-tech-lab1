@@ -1,0 +1,92 @@
+{
+  "run": "idempotency-aws",
+  "startedAt": "2026-11-17T15:55:52.410Z",
+  "checksPassRate": 1,
+  "checksPassed": 13,
+  "checksFailed": 0,
+  "cases": [
+    {
+      "name": "two sequential POST with one key",
+      "passed": true,
+      "rowsInDb": 1,
+      "responses": [
+        {
+          "status": 201,
+          "replayed": "false",
+          "durationMs": 101.98,
+          "body": "{\"id\":159894,\"title\":\"idempotency sequential 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.083Z\",\"author\":\"admin\"}"
+        },
+        {
+          "status": 201,
+          "replayed": "true",
+          "durationMs": 27.52,
+          "body": "{\"id\":159894,\"title\":\"idempotency sequential 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.083Z\",\"author\":\"admin\"}"
+        }
+      ]
+    },
+    {
+      "name": "two concurrent POST with one key",
+      "passed": true,
+      "rowsInDb": 1,
+      "responses": [
+        {
+          "status": 201,
+          "replayed": "false",
+          "durationMs": 28.69,
+          "body": "{\"id\":159895,\"title\":\"idempotency parallel 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.249Z\",\"author\":\"admin\"}"
+        },
+        {
+          "status": 201,
+          "replayed": "true",
+          "durationMs": 74.7,
+          "body": "{\"id\":159895,\"title\":\"idempotency parallel 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.249Z\",\"author\":\"admin\"}"
+        }
+      ]
+    },
+    {
+      "name": "same key, different body",
+      "passed": true,
+      "rowsInDb": 0,
+      "responses": [
+        {
+          "status": 422,
+          "replayed": null,
+          "durationMs": 24.94,
+          "body": "{\"error\":\"Idempotency-Key was used with a different request\"}"
+        }
+      ]
+    },
+    {
+      "name": "two POST without key",
+      "passed": true,
+      "rowsInDb": 2,
+      "responses": [
+        {
+          "status": 201,
+          "replayed": null,
+          "durationMs": 26.96,
+          "body": "{\"id\":159896,\"title\":\"idempotency no key 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.427Z\",\"author\":\"admin\"}"
+        },
+        {
+          "status": 201,
+          "replayed": null,
+          "durationMs": 27.11,
+          "body": "{\"id\":159897,\"title\":\"idempotency no key 1794930952547-569181945\",\"done\":false,\"created_at\":\"2026-11-17T15:55:55.454Z\",\"author\":\"admin\"}"
+        }
+      ]
+    },
+    {
+      "name": "invalid key",
+      "passed": true,
+      "rowsInDb": 0,
+      "responses": [
+        {
+          "status": 400,
+          "replayed": null,
+          "durationMs": 24.53,
+          "body": "{\"error\":\"Idempotency-Key must be 1-255 visible ASCII characters\"}"
+        }
+      ]
+    }
+  ]
+}

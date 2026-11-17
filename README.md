@@ -109,3 +109,5 @@ curl -X DELETE http://localhost:3000/tasks/1 -H "Authorization: Bearer $TOKEN"
 
 - [docs/SCHEDULE.md](docs/SCHEDULE.md) - мінімум задач за розкладом (2 з 08:00 до 22:00 за Києвом, 1 вночі),
   чому не 0, економія за місяць і перевірка спрацювання;
+- [docs/IDEMPOTENCY.md](docs/IDEMPOTENCY.md) - заголовок `Idempotency-Key` для `POST /tasks`: відповідь зберігається
+  в Redis на 24 години, повтор не вставляє другий рядок; тест `loadtest/idempotency.js` і результат прогону;
