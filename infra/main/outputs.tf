@@ -46,3 +46,15 @@ output "github_actions_role_arn" {
 output "dashboard_url" {
   value = "https://${var.region}.console.aws.amazon.com/cloudwatch/home?region=${var.region}#dashboards/dashboard/${aws_cloudwatch_dashboard.main.dashboard_name}"
 }
+
+output "jobs_queue_url" {
+  value = aws_sqs_queue.jobs.url
+}
+
+output "jobs_dlq_url" {
+  value = aws_sqs_queue.jobs_dlq.url
+}
+
+output "worker_service_name" {
+  value = aws_ecs_service.worker.name
+}

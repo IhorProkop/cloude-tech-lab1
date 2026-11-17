@@ -19,6 +19,7 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_execution.arn
+  task_role_arn            = aws_iam_role.app_task.arn
 
   container_definitions = jsonencode([
     {
@@ -43,7 +44,10 @@ resource "aws_ecs_task_definition" "app" {
         { name = "AUTH_USER", value = var.auth_user },
         { name = "REDIS_URL", value = "redis://${aws_service_discovery_service.redis.name}.${aws_service_discovery_private_dns_namespace.main.name}:6379" },
         { name = "CACHE_ENABLED", value = tostring(var.cache_enabled) },
-        { name = "AUTHOR_CACHE_TTL_SECONDS", value = tostring(var.author_cache_ttl_seconds) }
+        { name = "AUTHOR_CACHE_TTL_SECONDS", value = tostring(var.author_cache_ttl_seconds) },
+        { name = "AWS_REGION", value = var.region },
+        { name = "QUEUE_URL", value = aws_sqs_queue.jobs.url },
+        { name = "METRICS_NAMESPACE", value = var.project }
       ]
 
       secrets = [

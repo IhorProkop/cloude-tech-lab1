@@ -36,3 +36,69 @@ resource "aws_iam_role_policy" "read_secrets" {
     ]
   })
 }
+
+resource "aws_iam_role" "app_task" {
+  name = "${var.project}-app-task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "ecs-tasks.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "app_task_send_jobs" {
+  name = "send-jobs"
+  role = aws_iam_role.app_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sqs:SendMessage"
+        Resource = aws_sqs_queue.jobs.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "worker_task" {
+  name = "${var.project}-worker-task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "ecs-tasks.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "worker_task_consume_jobs" {
+  name = "consume-jobs"
+  role = aws_iam_role.worker_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:ChangeMessageVisibility"
+        ]
+        Resource = aws_sqs_queue.jobs.arn
+      }
+    ]
+  })
+}

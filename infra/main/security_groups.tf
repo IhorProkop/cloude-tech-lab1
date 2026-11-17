@@ -63,6 +63,14 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_security_group.app.id]
   }
 
+  ingress {
+    description     = "Redis from queue worker"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.worker.id]
+  }
+
   egress {
     description = "All outbound traffic"
     from_port   = 0
@@ -89,7 +97,33 @@ resource "aws_security_group" "db" {
     security_groups = [aws_security_group.app.id]
   }
 
+  ingress {
+    description     = "PostgreSQL from queue worker"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.worker.id]
+  }
+
   tags = {
     Name = "${var.project}-db-sg"
+  }
+}
+
+resource "aws_security_group" "worker" {
+  name        = "${var.project}-worker-sg"
+  description = "Queue worker (ECS tasks): no inbound, outbound to SQS, RDS and Redis"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project}-worker-sg"
   }
 }

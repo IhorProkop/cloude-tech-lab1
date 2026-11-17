@@ -160,6 +160,125 @@ resource "aws_cloudwatch_dashboard" "main" {
           ]
           yAxis = { left = { min = 0, showUnits = false } }
         }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 12
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Queue length, messages"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          stat   = "Maximum"
+          metrics = [
+            ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", aws_sqs_queue.jobs.name, { label = "Visible (waiting)" }],
+            ["AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", aws_sqs_queue.jobs.name, { label = "In flight" }],
+            ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", aws_sqs_queue.jobs_dlq.name, { label = "Dead-letter queue" }]
+          ]
+          annotations = {
+            horizontal = [
+              { label = "+1 worker at ${var.worker_scale_out_threshold}", value = var.worker_scale_out_threshold, color = "#ff7f0e" },
+              { label = "+2 workers at ${var.worker_scale_out_big_step}", value = var.worker_scale_out_big_step, color = "#d62728" }
+            ]
+          }
+          yAxis = { left = { min = 0, showUnits = false } }
+        }
+      },
+      {
+        type   = "metric"
+        x      = 8
+        y      = 12
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Queue worker tasks: desired vs running"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          stat   = "Maximum"
+          metrics = [
+            ["ECS/ContainerInsights", "DesiredTaskCount", "ClusterName", aws_ecs_cluster.main.name, "ServiceName", aws_ecs_service.worker.name, { label = "Desired" }],
+            ["ECS/ContainerInsights", "RunningTaskCount", "ClusterName", aws_ecs_cluster.main.name, "ServiceName", aws_ecs_service.worker.name, { label = "Running" }]
+          ]
+          yAxis = { left = { min = 0, max = var.worker_max_capacity + 1, showUnits = false } }
+        }
+      },
+      {
+        type   = "metric"
+        x      = 16
+        y      = 12
+        width  = 8
+        height = 6
+        properties = {
+          title  = "POST latency in the app, ms"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          metrics = [
+            [var.project, "Latency", "Route", "POST /tasks/async", { label = "POST /tasks/async p95", stat = "p95" }],
+            [var.project, "Latency", "Route", "POST /tasks/async", { label = "POST /tasks/async p50", stat = "p50" }],
+            [var.project, "Latency", "Route", "POST /tasks", { label = "POST /tasks p95", stat = "p95" }]
+          ]
+          yAxis = { left = { min = 0, showUnits = false } }
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 18
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Messages per minute: sent vs processed"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          stat   = "Sum"
+          metrics = [
+            ["AWS/SQS", "NumberOfMessagesSent", "QueueName", aws_sqs_queue.jobs.name, { label = "Sent by app" }],
+            ["AWS/SQS", "NumberOfMessagesDeleted", "QueueName", aws_sqs_queue.jobs.name, { label = "Deleted by worker (done)" }]
+          ]
+          yAxis = { left = { min = 0, showUnits = false } }
+        }
+      },
+      {
+        type   = "metric"
+        x      = 8
+        y      = 18
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Job delay: sent to done, ms"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          metrics = [
+            [var.project, "JobLatency", "Service", "worker", { label = "p95", stat = "p95" }],
+            [var.project, "JobLatency", "Service", "worker", { label = "p50", stat = "p50" }]
+          ]
+          yAxis = { left = { min = 0, showUnits = false } }
+        }
+      },
+      {
+        type   = "metric"
+        x      = 16
+        y      = 18
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Queue worker CPU utilization, %"
+          region = var.region
+          view   = "timeSeries"
+          period = 60
+          stat   = "Average"
+          metrics = [
+            ["AWS/ECS", "CPUUtilization", "ClusterName", aws_ecs_cluster.main.name, "ServiceName", aws_ecs_service.worker.name, { label = "Worker average CPU" }]
+          ]
+          yAxis = { left = { min = 0, max = 100, showUnits = false } }
+        }
       }
     ]
   })

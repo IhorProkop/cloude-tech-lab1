@@ -63,12 +63,19 @@ resource "aws_iam_role_policy" "github_deploy" {
           "ecs:UpdateService",
           "ecs:DescribeServices"
         ]
-        Resource = aws_ecs_service.app.arn
+        Resource = [
+          aws_ecs_service.app.arn,
+          aws_ecs_service.worker.arn
+        ]
       },
       {
-        Effect   = "Allow"
-        Action   = "iam:PassRole"
-        Resource = aws_iam_role.ecs_execution.arn
+        Effect = "Allow"
+        Action = "iam:PassRole"
+        Resource = [
+          aws_iam_role.ecs_execution.arn,
+          aws_iam_role.app_task.arn,
+          aws_iam_role.worker_task.arn
+        ]
       }
     ]
   })

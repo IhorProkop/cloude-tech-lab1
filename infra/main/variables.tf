@@ -43,7 +43,7 @@ variable "auth_user" {
 variable "image_tag" {
   description = "Тег Docker-образу застосунку в ECR (SHA коміту)"
   type        = string
-  default     = "d23d0d8ed2e75b49793671f951d55d0d29a8a6e8"
+  default     = "6bf11df2b25124d0477f4d87b51098d7d008f8d7"
 }
 
 variable "desired_count" {
@@ -159,4 +159,80 @@ variable "github_repo" {
 variable "alert_email" {
   description = "Email для сповіщень CloudWatch-алярмів (через SNS)"
   type        = string
+}
+
+variable "queue_max_receive_count" {
+  description = "Скільки разів SQS доставляє повідомлення, перш ніж перенести його в dead-letter queue"
+  type        = number
+  default     = 5
+}
+
+variable "worker_min_capacity" {
+  description = "Мінімальна кількість задач обробника черги"
+  type        = number
+  default     = 1
+}
+
+variable "worker_max_capacity" {
+  description = "Максимальна кількість задач обробника черги"
+  type        = number
+  default     = 3
+
+  validation {
+    condition     = var.worker_max_capacity <= 3
+    error_message = "За умовою бонусного завдання обробник масштабується від 1 до 3 задач."
+  }
+}
+
+variable "worker_batch_size" {
+  description = "Скільки повідомлень обробник забирає з черги за один ReceiveMessage (1-10)"
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.worker_batch_size >= 1 && var.worker_batch_size <= 10
+    error_message = "SQS віддає від 1 до 10 повідомлень за раз."
+  }
+}
+
+variable "worker_concurrency" {
+  description = "Скільки повідомлень одна задача обробника обробляє одночасно (обмежує навантаження на RDS)"
+  type        = number
+  default     = 10
+}
+
+variable "worker_scale_out_threshold" {
+  description = "Довжина черги (ApproximateNumberOfMessagesVisible), від якої додається задача обробника"
+  type        = number
+  default     = 100
+}
+
+variable "worker_scale_out_big_step" {
+  description = "Довжина черги, від якої додаються одразу дві задачі обробника"
+  type        = number
+  default     = 1000
+}
+
+variable "worker_scale_out_cooldown" {
+  description = "Період стабілізації після додавання задач обробника, с"
+  type        = number
+  default     = 60
+}
+
+variable "worker_scale_in_threshold" {
+  description = "Довжина черги, нижче якої задачі обробника вилучаються"
+  type        = number
+  default     = 10
+}
+
+variable "worker_scale_in_evaluation_minutes" {
+  description = "Скільки хвилин поспіль черга має бути короткою, щоб вилучити задачу обробника"
+  type        = number
+  default     = 3
+}
+
+variable "worker_scale_in_cooldown" {
+  description = "Період стабілізації після вилучення задачі обробника, с"
+  type        = number
+  default     = 120
 }
