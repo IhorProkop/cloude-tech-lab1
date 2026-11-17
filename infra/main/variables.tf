@@ -187,7 +187,7 @@ variable "worker_max_capacity" {
 variable "worker_batch_size" {
   description = "Скільки повідомлень обробник забирає з черги за один ReceiveMessage (1-10)"
   type        = number
-  default     = 10
+  default     = 1
 
   validation {
     condition     = var.worker_batch_size >= 1 && var.worker_batch_size <= 10
@@ -198,19 +198,19 @@ variable "worker_batch_size" {
 variable "worker_concurrency" {
   description = "Скільки повідомлень одна задача обробника обробляє одночасно (обмежує навантаження на RDS)"
   type        = number
-  default     = 10
+  default     = 1
 }
 
 variable "worker_scale_out_threshold" {
   description = "Довжина черги (ApproximateNumberOfMessagesVisible), від якої додається задача обробника"
   type        = number
-  default     = 100
+  default     = 500
 }
 
 variable "worker_scale_out_big_step" {
   description = "Довжина черги, від якої додаються одразу дві задачі обробника"
   type        = number
-  default     = 1000
+  default     = 3000
 }
 
 variable "worker_scale_out_cooldown" {
@@ -222,7 +222,7 @@ variable "worker_scale_out_cooldown" {
 variable "worker_scale_in_threshold" {
   description = "Довжина черги, нижче якої задачі обробника вилучаються"
   type        = number
-  default     = 10
+  default     = 50
 }
 
 variable "worker_scale_in_evaluation_minutes" {
