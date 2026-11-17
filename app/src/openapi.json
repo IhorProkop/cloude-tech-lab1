@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "3.1"
+    "version": "3.2"
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -113,7 +113,9 @@
       },
       "post": {
         "summary": "Створити задачу",
+        "description": "З заголовком Idempotency-Key перша відповідь (статус і тіло) зберігається в Redis на 24 години, повтор з тим самим ключем повертає її без нової вставки. Без заголовка поведінка звичайна.",
         "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -124,7 +126,10 @@
         },
         "responses": {
           "201": {
-            "description": "Задачу створено",
+            "description": "Задачу створено (або повтор збереженої відповіді для того самого Idempotency-Key)",
+            "headers": {
+              "Idempotency-Replayed": { "$ref": "#/components/headers/Idempotency-Replayed" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Task" }
@@ -132,7 +137,7 @@
             }
           },
           "400": {
-            "description": "Не передано title",
+            "description": "Не передано title або некоректний Idempotency-Key",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -146,7 +151,10 @@
                 "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
-          }
+          },
+          "409": { "$ref": "#/components/responses/IdempotencyInProgress" },
+          "422": { "$ref": "#/components/responses/IdempotencyMismatch" },
+          "503": { "$ref": "#/components/responses/IdempotencyUnavailable" }
         }
       }
     },
@@ -260,6 +268,48 @@
       "X-Cache-Coalesced": {
         "description": "Є лише тоді, коли запит не ходив у базу сам, а дочекався результату такого самого запиту, який уже виконувався в цьому процесі (single-flight)",
         "schema": { "type": "string", "enum": ["true"] }
+      },
+      "Idempotency-Replayed": {
+        "description": "Є лише в запитах з Idempotency-Key: false - запит виконано зараз, true - повернуто збережену відповідь",
+        "schema": { "type": "string", "enum": ["true", "false"] }
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "description": "Унікальний ключ операції від клієнта, 1-255 видимих ASCII-символів. Ключі окремі для кожного користувача.",
+        "schema": { "type": "string", "minLength": 1, "maxLength": 255, "example": "3f6c2a9e-1b7d-4c55-9a0e-6f2d8b1c7e44" }
+      }
+    },
+    "responses": {
+      "IdempotencyInProgress": {
+        "description": "Запит з цим Idempotency-Key ще виконується (результат не з'явився за 2 с)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "IdempotencyMismatch": {
+        "description": "Idempotency-Key уже використано з іншим тілом запиту",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "IdempotencyUnavailable": {
+        "description": "Передано Idempotency-Key, але Redis недоступний; запит не виконано",
+        "headers": {
+          "Retry-After": { "schema": { "type": "integer", "example": 1 } }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
       }
     },
     "securitySchemes": {

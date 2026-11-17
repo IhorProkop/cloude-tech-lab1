@@ -2,8 +2,9 @@ const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./auth');
 const cache = require('./cache');
+const idempotency = require('./idempotency');
+const { RECENT_TASKS_KEY, createTask } = require('./tasks');
 
-const RECENT_TASKS_KEY = 'tasks:recent';
 const RECENT_TASKS_LIMIT = 50;
 
 const router = express.Router();
@@ -47,14 +48,34 @@ router.post('/', requireAuth, async (req, res) => {
   if (typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required' });
   }
+  const idempotencyKey = req.get('Idempotency-Key');
+  if (idempotencyKey !== undefined && !idempotency.isValidKey(idempotencyKey)) {
+    return res.status(400).json({ error: 'Idempotency-Key must be 1-255 visible ASCII characters' });
+  }
+
+  const create = async () => {
+    const task = await createTask(title, req.user.sub);
+    return { status: 201, body: task };
+  };
+
   try {
-    const result = await pool.query(
-      'INSERT INTO tasks (title, author) VALUES ($1, $2) RETURNING *',
-      [title.trim(), req.user.sub]
+    if (idempotencyKey === undefined) {
+      const result = await create();
+      return res.status(result.status).json(result.body);
+    }
+    const result = await idempotency.run(
+      `user:${req.user.sub}`,
+      idempotencyKey,
+      idempotency.fingerprint('POST /tasks', req.body),
+      create
     );
-    await cache.remove(RECENT_TASKS_KEY);
-    res.status(201).json(result.rows[0]);
+    res.set('Idempotency-Replayed', String(result.replayed));
+    res.status(result.status).json(result.body);
   } catch (err) {
+    if (err instanceof idempotency.IdempotencyError) {
+      if (err.status === 503) res.set('Retry-After', '1');
+      return res.status(err.status).json({ error: err.message });
+    }
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }

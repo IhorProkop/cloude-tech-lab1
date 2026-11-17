@@ -3,6 +3,7 @@ const { pool, createTable } = require('./db');
 const routes = require('./routes');
 const authors = require('./authors');
 const cache = require('./cache');
+const idempotency = require('./idempotency');
 const { login } = require('./auth');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
@@ -43,7 +44,7 @@ app.use('/authors', authors);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 async function closeConnections() {
-  const results = await Promise.allSettled([pool.end(), cache.close()]);
+  const results = await Promise.allSettled([pool.end(), cache.close(), idempotency.close()]);
   results
     .filter((result) => result.status === 'rejected')
     .forEach((result) => console.error('Shutdown error:', result.reason));
