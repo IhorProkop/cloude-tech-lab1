@@ -54,6 +54,8 @@ Alarm на 5xx і на unhealthy targets з лабораторної робот�
 
 ## Знімки листів
 
+Знімки з прогону alerts-1 17.11.2026, ALARM о 21:48:39, OK о 21:53:39 (UTC).
+
 Лист про перевищення (ALARM):
 
 ![Лист ALARM](img/alert-alarm.png)
