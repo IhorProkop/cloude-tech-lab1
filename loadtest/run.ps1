@@ -7,7 +7,8 @@ param(
     [double]$ThinkTime = 0.2,
     [string]$SecretId = "cloude-tech-lab1-app-secrets",
     [string]$AuthUser = "admin",
-    [string]$Script = "script.js"
+    [string]$Script = "script.js",
+    [int]$Rate = 50
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,6 +41,7 @@ $env:BASE_URL = $baseUrl
 $env:AUTH_USER = $AuthUser
 $env:AUTH_PASSWORD = $authPassword
 $env:VUS = "$Vus"
+$env:RATE = "$Rate"
 $env:RAMP_UP = $RampUp
 $env:STEADY = $Steady
 $env:RAMP_DOWN = $RampDown
