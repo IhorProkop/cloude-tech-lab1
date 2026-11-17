@@ -1,9 +1,13 @@
+const crypto = require('crypto');
 const express = require('express');
 const { pool } = require('./db');
 const { requireAuth } = require('./auth');
 const cache = require('./cache');
 const idempotency = require('./idempotency');
 const { RECENT_TASKS_KEY, createTask } = require('./tasks');
+const jobs = require('./jobs');
+const queue = require('./queue');
+const metrics = require('./metrics');
 
 const RECENT_TASKS_LIMIT = 50;
 
@@ -43,41 +47,92 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, async (req, res) => {
+function readTitle(req, res) {
   const title = req.body?.title;
   if (typeof title !== 'string' || title.trim() === '') {
-    return res.status(400).json({ error: 'Title is required' });
+    res.status(400).json({ error: 'Title is required' });
+    return null;
   }
-  const idempotencyKey = req.get('Idempotency-Key');
-  if (idempotencyKey !== undefined && !idempotency.isValidKey(idempotencyKey)) {
-    return res.status(400).json({ error: 'Idempotency-Key must be 1-255 visible ASCII characters' });
+  return title;
+}
+
+function readIdempotencyKey(req, res) {
+  const key = req.get('Idempotency-Key');
+  if (key !== undefined && !idempotency.isValidKey(key)) {
+    res.status(400).json({ error: 'Idempotency-Key must be 1-255 visible ASCII characters' });
+    return null;
+  }
+  return key;
+}
+
+async function execute(req, operation, key, action) {
+  if (key === undefined) return { ...(await action()), replayed: null };
+  return idempotency.run(`user:${req.user.sub}`, key, idempotency.fingerprint(operation, req.body), action);
+}
+
+function sendResult(res, result) {
+  if (result.replayed !== null) res.set('Idempotency-Replayed', String(result.replayed));
+  if (result.body?.location) res.set('Location', result.body.location);
+  res.status(result.status).json(result.body);
+}
+
+function sendError(res, err) {
+  if (err instanceof idempotency.IdempotencyError) {
+    if (err.status === 503) res.set('Retry-After', '1');
+    return res.status(err.status).json({ error: err.message });
+  }
+  if (err instanceof jobs.JobStoreError || err.name === 'QueueSendError') {
+    console.error(err.message);
+    res.set('Retry-After', '1');
+    return res.status(503).json({ error: 'Queue or job store unavailable' });
+  }
+  console.error(err);
+  res.status(500).json({ error: 'Server error' });
+}
+
+router.post('/', metrics.trackLatency('POST /tasks'), requireAuth, async (req, res) => {
+  const title = readTitle(req, res);
+  if (title === null) return;
+  const key = readIdempotencyKey(req, res);
+  if (key === null) return;
+
+  try {
+    const result = await execute(req, 'POST /tasks', key, async () => ({
+      status: 201,
+      body: await createTask(title, req.user.sub),
+    }));
+    sendResult(res, result);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.post('/async', metrics.trackLatency('POST /tasks/async'), requireAuth, async (req, res) => {
+  const title = readTitle(req, res);
+  if (title === null) return;
+  const key = readIdempotencyKey(req, res);
+  if (key === null) return;
+  if (!queue.enabled) {
+    return res.status(503).json({ error: 'Queue is not configured' });
   }
 
-  const create = async () => {
-    const task = await createTask(title, req.user.sub);
-    return { status: 201, body: task };
+  const enqueue = async () => {
+    const jobId = crypto.randomUUID();
+    await jobs.create(jobId);
+    try {
+      await queue.send({ jobId, title: title.trim(), author: req.user.sub });
+    } catch (err) {
+      await jobs.remove(jobId).catch(() => {});
+      err.name = 'QueueSendError';
+      throw err;
+    }
+    return { status: 202, body: { jobId, status: 'queued', location: `/jobs/${jobId}` } };
   };
 
   try {
-    if (idempotencyKey === undefined) {
-      const result = await create();
-      return res.status(result.status).json(result.body);
-    }
-    const result = await idempotency.run(
-      `user:${req.user.sub}`,
-      idempotencyKey,
-      idempotency.fingerprint('POST /tasks', req.body),
-      create
-    );
-    res.set('Idempotency-Replayed', String(result.replayed));
-    res.status(result.status).json(result.body);
+    sendResult(res, await execute(req, 'POST /tasks/async', key, enqueue));
   } catch (err) {
-    if (err instanceof idempotency.IdempotencyError) {
-      if (err.status === 503) res.set('Retry-After', '1');
-      return res.status(err.status).json({ error: err.message });
-    }
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    sendError(res, err);
   }
 });
 

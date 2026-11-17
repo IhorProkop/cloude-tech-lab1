@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "3.2"
+    "version": "3.3"
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -155,6 +155,113 @@
           "409": { "$ref": "#/components/responses/IdempotencyInProgress" },
           "422": { "$ref": "#/components/responses/IdempotencyMismatch" },
           "503": { "$ref": "#/components/responses/IdempotencyUnavailable" }
+        }
+      }
+    },
+    "/tasks/async": {
+      "post": {
+        "summary": "Створити задачу асинхронно через чергу SQS",
+        "description": "Сервіс кладе повідомлення в чергу і одразу відповідає 202 з id операції. Задачу вставляє окремий обробник; результат - у GET /jobs/{id} (Location). Idempotency-Key працює так само, як у POST /tasks: повтор поверне ту саму операцію.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewTask" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Операцію прийнято в чергу",
+            "headers": {
+              "Location": {
+                "description": "Адреса статусу операції",
+                "schema": { "type": "string", "example": "/jobs/1d93a2b9-a754-4ce9-a049-023dc0c41ade" }
+              },
+              "Idempotency-Replayed": { "$ref": "#/components/headers/Idempotency-Replayed" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Accepted" }
+              }
+            }
+          },
+          "400": {
+            "description": "Не передано title або некоректний Idempotency-Key",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Немає або недійсний токен",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": { "$ref": "#/components/responses/IdempotencyInProgress" },
+          "422": { "$ref": "#/components/responses/IdempotencyMismatch" },
+          "503": {
+            "description": "Черга не налаштована або недоступна, Redis недоступний; операцію не прийнято",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "summary": "Статус асинхронної операції",
+        "description": "queued - повідомлення в черзі або обробляється, done - задачу створено (taskId), failed - усі спроби обробки невдалі, повідомлення пішло в dead-letter queue. Статус зберігається в Redis 24 години.",
+        "responses": {
+          "200": {
+            "description": "Статус операції",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "400": {
+            "description": "Некоректний id",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Операції немає або минуло 24 години",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "503": {
+            "description": "Redis недоступний",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
         }
       }
     },
@@ -357,6 +464,28 @@
         "type": "object",
         "properties": {
           "error": { "type": "string", "example": "Task not found" }
+        }
+      },
+      "Accepted": {
+        "type": "object",
+        "properties": {
+          "jobId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["queued"] },
+          "location": { "type": "string", "example": "/jobs/1d93a2b9-a754-4ce9-a049-023dc0c41ade" }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["queued", "done", "failed"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "taskId": { "type": "integer", "description": "Є, коли status = done", "example": 11 },
+          "task": { "type": "string", "description": "Є, коли status = done", "example": "/tasks/11" },
+          "attempts": { "type": "integer", "description": "Номер спроби доставки, на якій операцію завершено", "example": 1 },
+          "duplicate": { "type": "boolean", "description": "true, якщо це повторна доставка вже обробленого повідомлення" },
+          "error": { "type": "string", "description": "Є, коли status = failed" }
         }
       }
     }

@@ -2,8 +2,11 @@ const express = require('express');
 const { pool, createTable } = require('./db');
 const routes = require('./routes');
 const authors = require('./authors');
+const jobRoutes = require('./jobRoutes');
+const queue = require('./queue');
+const metrics = require('./metrics');
 const cache = require('./cache');
-const idempotency = require('./idempotency');
+const store = require('./redis');
 const { login } = require('./auth');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
@@ -40,11 +43,14 @@ app.post('/login', login);
 
 app.use('/tasks', routes);
 app.use('/authors', authors);
+app.use('/jobs', jobRoutes);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 async function closeConnections() {
-  const results = await Promise.allSettled([pool.end(), cache.close(), idempotency.close()]);
+  metrics.flush();
+  queue.destroy();
+  const results = await Promise.allSettled([pool.end(), cache.close(), store.close()]);
   results
     .filter((result) => result.status === 'rejected')
     .forEach((result) => console.error('Shutdown error:', result.reason));

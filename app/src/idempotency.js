@@ -1,28 +1,11 @@
 const crypto = require('crypto');
-const { createClient } = require('redis');
+const { client, isReady } = require('./redis');
 
 const RESULT_TTL_SECONDS = 24 * 60 * 60;
 const LOCK_TTL_SECONDS = 30;
 const WAIT_FOR_RESULT_MS = 2000;
 const WAIT_STEP_MS = 50;
 const KEY_PATTERN = /^[\x21-\x7e]{1,255}$/;
-
-const client = process.env.REDIS_URL
-  ? createClient({
-      url: process.env.REDIS_URL,
-      disableOfflineQueue: true,
-      commandOptions: { timeout: 1000 },
-      socket: {
-        connectTimeout: 2000,
-        reconnectStrategy: (retries) => Math.min(500 * (retries + 1), 5000),
-      },
-    })
-  : null;
-
-if (client) {
-  client.on('error', (err) => console.error('Idempotency Redis error:', err.message));
-  client.connect().catch((err) => console.error('Idempotency Redis connect failed:', err.message));
-}
 
 class IdempotencyError extends Error {
   constructor(status, message) {
@@ -59,7 +42,7 @@ function sleep(ms) {
 }
 
 function ensureReady() {
-  if (!client?.isReady) throw new IdempotencyError(503, 'Idempotency store unavailable');
+  if (!isReady()) throw new IdempotencyError(503, 'Idempotency store unavailable');
 }
 
 async function redisCall(operation) {
@@ -128,13 +111,4 @@ async function run(scope, key, print, execute) {
   }
 }
 
-async function close() {
-  if (!client?.isOpen) return;
-  if (client.isReady) {
-    await client.close();
-    return;
-  }
-  client.destroy();
-}
-
-module.exports = { IdempotencyError, fingerprint, isValidKey, run, close, RESULT_TTL_SECONDS };
+module.exports = { IdempotencyError, fingerprint, isValidKey, run, RESULT_TTL_SECONDS };
