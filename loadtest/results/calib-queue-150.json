@@ -1,0 +1,97 @@
+{
+  "run": "calib-queue-150",
+  "ratePerSecond": 150,
+  "stages": {
+    "rampUp": "30s",
+    "steady": "120s",
+    "drain": "30s"
+  },
+  "observers": 2,
+  "phasesUtc": {
+    "rampUpStart": "2026-11-17T16:35:06.675Z",
+    "steadyStart": "2026-11-17T16:35:36.675Z",
+    "drainStart": "2026-11-17T16:37:36.675Z",
+    "end": "2026-11-17T16:38:06.675Z"
+  },
+  "durationSeconds": 180.3,
+  "requests": 20979,
+  "requestsPerSecond": 116.35,
+  "asyncWrites": 20644,
+  "asyncAcceptedRate": 1,
+  "httpErrorRate": 0,
+  "checksPassRate": 1,
+  "postAsyncLatencyMs": {
+    "avg": 51.09,
+    "p50": 42.75,
+    "p90": 69.04,
+    "p95": 118.15,
+    "p99": 195.99,
+    "max": 302.2
+  },
+  "postAsyncLatencyByPhaseMs": {
+    "ramp-up": {
+      "avg": 48.35,
+      "p50": 43.79,
+      "p90": 54.44,
+      "p95": 86.36,
+      "p99": 162.97,
+      "max": 241.19
+    },
+    "steady": {
+      "avg": 51.37,
+      "p50": 42.53,
+      "p90": 72.16,
+      "p95": 122.22,
+      "p99": 197.72,
+      "max": 302.2
+    },
+    "drain": {
+      "avg": 60.13,
+      "p50": 43.9,
+      "p90": 114.66,
+      "p95": 179.16,
+      "p99": 224.26,
+      "max": 227.75
+    }
+  },
+  "jobCompletionMs": {
+    "avg": 1078.21,
+    "p50": 1025,
+    "p90": 1051.4,
+    "p95": 1124,
+    "p99": 2148.84,
+    "max": 3075
+  },
+  "jobCompletionByPhaseMs": {
+    "ramp-up": {
+      "avg": 1048.29,
+      "p50": 1025,
+      "p90": 1033.2,
+      "p95": 1085,
+      "p99": 1544.1,
+      "max": 2049
+    },
+    "steady": {
+      "avg": 1100.41,
+      "p50": 1025,
+      "p90": 1075.3,
+      "p95": 2048.65,
+      "p99": 2164.02,
+      "max": 3075
+    },
+    "drain": {
+      "avg": 1025.14,
+      "p50": 1025,
+      "p90": 1026,
+      "p95": 1026.25,
+      "p99": 1028.35,
+      "max": 1030
+    }
+  },
+  "observedJobs": {
+    "done": 319,
+    "failed": 0,
+    "timedOut": 0,
+    "duplicateDeliveries": 0
+  }
+}

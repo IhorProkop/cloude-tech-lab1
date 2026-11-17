@@ -15,22 +15,30 @@
 .
   .env.example
   compose.yaml
-  .github/workflows/deploy.yml   збірка образу і деплой в ECS
+  .github/workflows/deploy.yml   збірка образу і деплой в ECS (застосунок і обробник черги)
   app/                           код застосунку і Dockerfile
     Dockerfile
     package.json
     src/
-      index.js
-      routes.js
+      index.js                   HTTP-сервер
+      worker.js                  обробник черги SQS (окремий ECS-сервіс, той самий образ)
+      routes.js                  /tasks, /tasks/async
+      jobRoutes.js               /jobs/:id
       authors.js
+      tasks.js                   вставка задачі та інвалідація кешу списку
+      idempotency.js             Idempotency-Key у Redis
+      jobs.js                    статуси асинхронних операцій у Redis
+      queue.js                   відправка в SQS пакетами
+      metrics.js                 латентність у CloudWatch через Embedded Metric Format
+      redis.js
       cache.js
       auth.js
       db.js
       openapi.json
   infra/
     bootstrap/                   S3-бакет для state і бюджет, створюється один раз
-    main/                        мережа, ALB, ECS, автомасштабування, Redis, RDS, ECR, секрети і моніторинг
-  loadtest/                      сценарій k6, run.ps1 і результати прогонів
+    main/                        мережа, ALB, ECS, автомасштабування, Redis, RDS, ECR, SQS, секрети і моніторинг
+  loadtest/                      сценарії k6 (script.js, idempotency.js, queue.js), run.ps1 і результати прогонів
   docs/                          звіти лабораторної роботи 2 і знімки графіків
 ```
 
@@ -111,3 +119,6 @@ curl -X DELETE http://localhost:3000/tasks/1 -H "Authorization: Bearer $TOKEN"
   чому не 0, економія за місяць і перевірка спрацювання;
 - [docs/IDEMPOTENCY.md](docs/IDEMPOTENCY.md) - заголовок `Idempotency-Key` для `POST /tasks`: відповідь зберігається
   в Redis на 24 години, повтор не вставляє другий рядок; тест `loadtest/idempotency.js` і результат прогону;
+- [docs/QUEUE.md](docs/QUEUE.md) - `POST /tasks/async`: повідомлення в SQS, відповідь `202` і статус у
+  `GET /jobs/:id`, окремий ECS-сервіс-обробник із dead-letter queue і масштабуванням 1-3 задачі від довжини
+  черги, доставка «щонайменше один раз», прогін `loadtest/queue.js` зі знімками панелі.
